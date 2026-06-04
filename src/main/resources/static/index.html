@@ -30,6 +30,17 @@
         <span id="fileCount" class="file-count">加载中...</span>
       </div>
       <div class="toolbar-right">
+        <div class="filter-group">
+          <button class="filter-btn active" data-mode="all" onclick="changeFilterMode('all')" title="全部">
+            <span class="material-icons" style="font-size:18px">select_all</span>
+          </button>
+          <button class="filter-btn" data-mode="files" onclick="changeFilterMode('files')" title="仅文件">
+            <span class="material-icons" style="font-size:18px">description</span>
+          </button>
+          <button class="filter-btn" data-mode="folders" onclick="changeFilterMode('folders')" title="仅文件夹">
+            <span class="material-icons" style="font-size:18px">folder</span>
+          </button>
+        </div>
         <select id="sortSelect" class="sort-select" onchange="sortFiles()">
           <option value="name-asc">名称 (A-Z)</option>
           <option value="name-desc">名称 (Z-A)</option>
@@ -63,12 +74,25 @@
     <div class="modal preview-modal">
       <div class="modal-header">
         <h3 id="previewTitle"></h3>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost" onclick="copyLink(document.getElementById('previewTitle').textContent)">
-            <span class="material-icons">link</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div id="previewEncodingWrap" style="display:none;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary)">
+            <span class="material-icons" style="font-size:14px">translate</span>
+            <select id="previewEncoding" class="sort-select" onchange="reloadPreviewText()" style="padding:4px 6px;font-size:11px">
+              <option value="">自动检测</option>
+              <option value="UTF-8">UTF-8</option>
+              <option value="GBK">GBK</option>
+              <option value="GB2312">GB2312</option>
+              <option value="BIG5">BIG5</option>
+              <option value="ISO-8859-1">ISO-8859-1</option>
+              <option value="UTF-16LE">UTF-16 LE</option>
+              <option value="UTF-16BE">UTF-16 BE</option>
+            </select>
+          </div>
+          <button class="btn btn-ghost preview-action-btn" onclick="downloadPreviewFile()">
+            <span class="material-icons">download</span>
           </button>
-          <button class="btn btn-ghost" onclick="openInNewTab(document.getElementById('previewTitle').textContent)">
-            <span class="material-icons">open_in_new</span>
+          <button class="btn btn-ghost preview-action-btn" onclick="copyLink(document.getElementById('previewTitle').textContent)">
+            <span class="material-icons">link</span>
           </button>
           <button class="btn btn-ghost" onclick="closeModal('previewModal')">
             <span class="material-icons">close</span>

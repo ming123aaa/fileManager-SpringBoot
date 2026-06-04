@@ -2,11 +2,13 @@ package com.example.filemanager;
 
 import com.example.filemanager.Bean.FileBean;
 import com.google.gson.Gson;
+import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.servlet.view.RedirectView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,6 +21,22 @@ import java.util.List;
 @RestController
 @RequestMapping("main")
 public class mainApi {
+
+    /**
+     * 重定向到 index.html
+     */
+    @RequestMapping(value = {"/index", "/index.html"})
+    public RedirectView redirectToIndex() {
+        return new RedirectView("/index.html");
+    }
+
+    /**
+     * 重定向到 file.html
+     */
+    @RequestMapping(value = {"/file", "/file.html"})
+    public RedirectView redirectToFile() {
+        return new RedirectView("/file.html");
+    }
 
     /**
      * 安全路径解析：将用户输入的 path 解析为安全的绝对路径，防止路径穿越
@@ -276,16 +294,86 @@ public class mainApi {
     }
 
     /**
-     * 读取文本（指定路径）
+     * 检测文件编码
+     */
+    private java.nio.charset.Charset detectEncoding(File file) {
+        try (java.io.InputStream is = new FileInputStream(file)) {
+            byte[] head = new byte[3];
+            if (is.read(head) >= 3) {
+                // UTF-8 BOM
+                if (head[0] == (byte) 0xEF && head[1] == (byte) 0xBB && head[2] == (byte) 0xBF) {
+                    return java.nio.charset.StandardCharsets.UTF_8;
+                }
+                // UTF-16 LE BOM
+                if (head[0] == (byte) 0xFF && head[1] == (byte) 0xFE) {
+                    return java.nio.charset.Charset.forName("UTF-16LE");
+                }
+                // UTF-16 BE BOM
+                if (head[0] == (byte) 0xFE && head[1] == (byte) 0xFF) {
+                    return java.nio.charset.Charset.forName("UTF-16BE");
+                }
+            }
+            // 检测是否包含非 ASCII 字符，如果是则尝试 GBK
+            is.close();
+            try (java.io.InputStream is2 = new FileInputStream(file)) {
+                byte[] buf = new byte[8192];
+                int len;
+                boolean hasHighByte = false;
+                while ((len = is2.read(buf)) != -1) {
+                    for (int i = 0; i < len; i++) {
+                        if ((buf[i] & 0xFF) > 127) {
+                            hasHighByte = true;
+                            break;
+                        }
+                    }
+                    if (hasHighByte) break;
+                }
+                if (hasHighByte) {
+                    // 尝试用 GBK 解码验证
+                    java.nio.charset.Charset gbk = java.nio.charset.Charset.forName("GBK");
+                    java.nio.charset.CharsetDecoder decoder = gbk.newDecoder();
+                    decoder.onMalformedInput(java.nio.charset.CodingErrorAction.REPORT);
+                    try (java.io.InputStream is3 = new FileInputStream(file)) {
+                        byte[] testBuf = new byte[4096];
+                        int testLen = is3.read(testBuf);
+                        if (testLen > 0) {
+                            java.nio.ByteBuffer byteBuffer = java.nio.ByteBuffer.wrap(testBuf, 0, testLen);
+                            decoder.decode(byteBuffer);
+                        }
+                        return gbk;
+                    } catch (Exception e) {
+                        // GBK 解码失败，使用 UTF-8
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        return java.nio.charset.StandardCharsets.UTF_8;
+    }
+
+    /**
+     * 读取文本（指定路径，支持指定编码或自动检测）
      */
     @RequestMapping(value = "/readText", method = {RequestMethod.GET, RequestMethod.POST})
     @ResponseBody
-    public String readText(@RequestParam(value = "path", required = false, defaultValue = "test.txt") String path) {
+    public String readText(@RequestParam(value = "path", required = false, defaultValue = "test.txt") String path,
+                           @RequestParam(value = "encoding", required = false) String encoding) {
         File file = safePath(path);
         if (!file.isFile() || !file.exists()) {
             return "文件不存在";
         }
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+        java.nio.charset.Charset charset;
+        if (encoding != null && !encoding.isEmpty()) {
+            try {
+                charset = java.nio.charset.Charset.forName(encoding);
+            } catch (Exception e) {
+                charset = detectEncoding(file);
+            }
+        } else {
+            charset = detectEncoding(file);
+        }
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), charset))) {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = br.readLine()) != null) {

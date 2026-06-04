@@ -60,17 +60,32 @@ mvn clean package -DskipTests
 ### 运行项目
 
 ```bash
-# 默认端口 8080
-java -jar target/FileManager-0.0.1-SNAPSHOT.jar
+# 默认配置运行
+java -Dfile.encoding=utf-8 -jar target/FileManager-0.0.1-SNAPSHOT.jar
 
-# 指定存储路径
-java -jar target/FileManager-0.0.1-SNAPSHOT.jar /path/to/files
+# 方式一：使用 --path 参数指定存储路径
+java -Dfile.encoding=utf-8 -jar target/FileManager-0.0.1-SNAPSHOT.jar --path=/your/files/path
+
+# 方式二：使用 --storage 参数指定存储路径
+java -Dfile.encoding=utf-8 -jar target/FileManager-0.0.1-SNAPSHOT.jar --storage=D:\my-files
+
+# 方式三：直接传入路径（兼容旧版）
+java -Dfile.encoding=utf-8 -jar target/FileManager-0.0.1-SNAPSHOT.jar /path/to/files
 
 # 指定端口和存储路径
-java -jar target/FileManager-0.0.1-SNAPSHOT.jar --server.port=xxxx /path/to/files
+java -Dfile.encoding=utf-8 -jar target/FileManager-0.0.1-SNAPSHOT.jar --server.port=9090 --path=/your/files/path
 ```
 
-如果不指定存储路径，当前环境下的 `./file`
+**参数说明：**
+
+| 参数 | 说明 | 示例 |
+|------|------|------|
+| `--path` 或 `--storage` | 文件存储目录 | `--path=D:\files` |
+| `--server.port` | 服务端口 | `--server.port=9090` |
+
+**默认路径：**
+- Windows: `./file`
+- Linux/Mac: `./file`
 
 ## API 接口
 

@@ -4,6 +4,8 @@ let allFiles = [];
 let viewMode = 'grid';
 let sortBy = 'name';
 let sortDir = 'asc';
+let filterMode = 'all'; // all: 全部, files: 仅文件, folders: 仅文件夹
+let currentEncoding = ''; // 当前编码，空表示自动检测
 let selectedFile = null;
 let contextTarget = null;
 let deleteTarget = null;
@@ -18,7 +20,7 @@ const FILE_TYPES = {
   video: {exts:['mp4','avi','mkv','mov','wmv','flv','webm','m4v'], icon:'movie', color:'#9b59b6'},
   audio: {exts:['mp3','wav','flac','aac','ogg','wma','m4a'], icon:'audiotrack', color:'#f39c12'},
   text:  {exts:['txt','log','csv','json','xml','yaml','yml','ini','cfg','conf','properties'], icon:'description', color:'#3498db'},
-  code:  {exts:['java','py','js','ts','html','css','php','c','cpp','h','go','rs','rb','sh','bat','sql','vue','jsx','tsx'], icon:'code', color:'#27ae60'},
+  code:  {exts:['gitignore','md','ets','kt','java','py','js','ts','html','css','php','c','cpp','h','go','rs','rb','sh','bat','sql','vue','jsx','tsx'], icon:'code', color:'#27ae60'},
   doc:   {exts:['doc','docx','xls','xlsx','ppt','pptx'], icon:'article', color:'#2980b9'},
   pdf:   {exts:['pdf'], icon:'picture_as_pdf', color:'#e74c3c'},
   zip:   {exts:['zip','rar','7z','tar','gz','bz2','xz'], icon:'folder_zip', color:'#f39c12'},
@@ -109,6 +111,26 @@ function loadState() {
   if (urlPath) {
     currentPath = decodeURIComponent(urlPath);
   }
+  // 从 localStorage 恢复状态
+  const savedView = localStorage.getItem('fm_viewMode');
+  if (savedView) viewMode = savedView;
+  const savedSort = localStorage.getItem('fm_sortBy');
+  if (savedSort) sortBy = savedSort;
+  const savedDir = localStorage.getItem('fm_sortDir');
+  if (savedDir) sortDir = savedDir;
+  const savedFilter = localStorage.getItem('fm_filterMode');
+  if (savedFilter) filterMode = savedFilter;
+}
+
+function saveViewState() {
+  localStorage.setItem('fm_viewMode', viewMode);
+}
+function saveSortState() {
+  localStorage.setItem('fm_sortBy', sortBy);
+  localStorage.setItem('fm_sortDir', sortDir);
+}
+function saveFilterState() {
+  localStorage.setItem('fm_filterMode', filterMode);
 }
 
 function loadFiles() {
@@ -130,11 +152,29 @@ function loadFiles() {
 function applyFilters() {
   const query = document.getElementById('searchInput').value.toLowerCase().trim();
   let filtered = allFiles;
+  
+  // 按类型筛选
+  if (filterMode === 'files') {
+    filtered = filtered.filter(f => !f.isFolder);
+  } else if (filterMode === 'folders') {
+    filtered = filtered.filter(f => f.isFolder);
+  }
+  
+  // 按名称搜索
   if (query) {
-    filtered = allFiles.filter(f => f.name.toLowerCase().includes(query));
+    filtered = filtered.filter(f => f.name.toLowerCase().includes(query));
   }
   files = sortFileList(filtered);
   renderFiles();
+}
+
+function changeFilterMode(mode) {
+  filterMode = mode;
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  saveFilterState();
+  applyFilters();
 }
 
 function sortFiles() {
@@ -142,6 +182,7 @@ function sortFiles() {
   const [key, dir] = sort.split('-');
   sortBy = key;
   sortDir = dir;
+  saveSortState();
   applyFilters();
 }
 
@@ -181,10 +222,18 @@ function renderFiles() {
   const countEl = document.getElementById('fileCount');
   const folderCount = files.filter(f => f.isFolder).length;
   const fileCount = files.filter(f => !f.isFolder).length;
+  const totalFolders = allFiles.filter(f => f.isFolder).length;
+  const totalFiles = allFiles.filter(f => !f.isFolder).length;
   const parts = [];
+  
   if (folderCount > 0) parts.push(folderCount + ' 个文件夹');
   if (fileCount > 0) parts.push(fileCount + ' 个文件');
-  countEl.textContent = parts.length ? parts.join('，') : '空目录';
+  
+  let countText = parts.length ? parts.join('，') : '空目录';
+  if (filterMode !== 'all') {
+    countText += ` (共 ${totalFolders} 文件夹, ${totalFiles} 文件)`;
+  }
+  countEl.textContent = countText;
 
   if (files.length === 0) {
     content.innerHTML = `<div class="empty-state">
@@ -272,6 +321,7 @@ function setView(mode) {
   viewMode = mode;
   document.getElementById('viewGrid').classList.toggle('active', mode === 'grid');
   document.getElementById('viewList').classList.toggle('active', mode === 'list');
+  saveViewState();
   renderFiles();
 }
 
@@ -317,9 +367,31 @@ function showItemMenu(e, name, isFolder) {
       <span class="material-icons">delete</span>删除</div>`;
   }
   menu.innerHTML = html;
-  menu.style.left = Math.min(e.clientX, window.innerWidth - 220) + 'px';
-  menu.style.top = Math.min(e.clientY, window.innerHeight - 280) + 'px';
   menu.classList.add('show');
+  
+  // 获取菜单实际尺寸后调整位置
+  const menuRect = menu.getBoundingClientRect();
+  const menuWidth = menuRect.width;
+  const menuHeight = menuRect.height;
+  
+  let left = e.clientX;
+  let top = e.clientY;
+  
+  // 右边界检查
+  if (left + menuWidth > window.innerWidth) {
+    left = window.innerWidth - menuWidth - 10;
+  }
+  // 下边界检查
+  if (top + menuHeight > window.innerHeight) {
+    top = window.innerHeight - menuHeight - 10;
+  }
+  // 左边界检查
+  if (left < 0) left = 10;
+  // 上边界检查
+  if (top < 0) top = 10;
+  
+  menu.style.left = left + 'px';
+  menu.style.top = top + 'px';
 }
 
 function downloadFile(name) {
@@ -338,13 +410,37 @@ function getFileUrl(name) {
   return window.location.origin + '/main/files/' + encodeURIComponent(path).replace(/%2F/g, '/');
 }
 
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      toast('链接已复制到剪贴板');
+    }).catch(() => {
+      fallbackCopy(text);
+    });
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    document.execCommand('copy');
+    toast('链接已复制到剪贴板');
+  } catch (err) {
+    toast('复制失败: ' + text, 'error');
+  }
+  document.body.removeChild(textarea);
+}
+
 function copyLink(name) {
   const url = getFileUrl(name);
-  navigator.clipboard.writeText(url).then(() => {
-    toast('下载链接已复制到剪贴板');
-  }).catch(() => {
-    toast('复制失败，请手动复制', 'error');
-  });
+  copyToClipboard(url);
 }
 
 function openInNewTab(name) {
@@ -359,11 +455,7 @@ function getFolderUrl(name) {
 
 function copyFolderLink(name) {
   const url = getFolderUrl(name);
-  navigator.clipboard.writeText(url).then(() => {
-    toast('文件夹链接已复制到剪贴板');
-  }).catch(() => {
-    toast('复制失败，请手动复制', 'error');
-  });
+  copyToClipboard(url);
 }
 
 function openFolderInNewTab(name) {
@@ -391,6 +483,8 @@ function previewFile(name) {
   const title = document.getElementById('previewTitle');
   const body = document.getElementById('previewBody');
   const editBtn = document.getElementById('editButton');
+  const encodingWrap = document.getElementById('previewEncodingWrap');
+  const encodingSelect = document.getElementById('previewEncoding');
   title.textContent = name;
   body.innerHTML = '';
 
@@ -398,7 +492,17 @@ function previewFile(name) {
   const ft = getFileType(name);
   const isTextFile = ft && (ft.type === 'text' || ft.type === 'code');
 
-  editBtn.style.display = isTextFile ? 'flex' : 'none';
+  if (editBtn) {
+    editBtn.style.display = isTextFile ? 'flex' : 'none';
+  }
+
+  // 显示/隐藏编码选择器
+  if (encodingWrap) {
+    encodingWrap.style.display = isTextFile ? 'flex' : 'none';
+  }
+  if (encodingSelect && currentEncoding) {
+    encodingSelect.value = currentEncoding;
+  }
 
   if (ft && ft.type === 'image') {
     const img = document.createElement('img');
@@ -419,13 +523,7 @@ function previewFile(name) {
     aud.autoplay = true;
     body.appendChild(aud);
   } else if (isTextFile) {
-    api('readText', {path: previewPath}).then(text => {
-      const pre = document.createElement('pre');
-      pre.textContent = text;
-      body.appendChild(pre);
-    }).catch(() => {
-      body.innerHTML = '<p style="padding:40px;color:var(--text-secondary)">无法预览此文件</p>';
-    });
+    loadPreviewText();
   } else if (ext === 'pdf') {
     const iframe = document.createElement('iframe');
     iframe.src = '/main/files/' + encodeURIComponent(previewPath).replace(/%2F/g, '/');
@@ -443,16 +541,59 @@ function previewFile(name) {
   modal.classList.add('show');
 }
 
+function loadPreviewText(encoding) {
+  const body = document.getElementById('previewBody');
+  const params = {path: previewPath};
+  if (encoding) params.encoding = encoding;
+  
+  api('readText', params).then(text => {
+    const pre = document.createElement('pre');
+    pre.textContent = text;
+    body.appendChild(pre);
+  }).catch(() => {
+    body.innerHTML = '<p style="padding:40px;color:var(--text-secondary)">无法预览此文件</p>';
+  });
+}
+
+function reloadPreviewText() {
+  const select = document.getElementById('previewEncoding');
+  const body = document.getElementById('previewBody');
+  currentEncoding = select ? select.value : '';
+  
+  // 移除旧的 pre 元素
+  const oldPre = body.querySelector('pre');
+  if (oldPre) oldPre.remove();
+  
+  loadPreviewText(currentEncoding);
+}
+
 function editFile() {
   const name = previewPath.split('/').pop();
-  api('readText', {path: previewPath}).then(text => {
+  const params = {path: previewPath};
+  if (currentEncoding) params.encoding = currentEncoding;
+  
+  api('readText', params).then(text => {
     document.getElementById('editorTitle').textContent = '编辑: ' + name;
     document.getElementById('editorTextarea').value = text;
+    
+    // 更新编码选择器
+    const editorEncoding = document.getElementById('editorEncoding');
+    if (editorEncoding) {
+      editorEncoding.value = currentEncoding;
+    }
+    
     closeModal('previewModal');
     document.getElementById('editorModal').classList.add('show');
   }).catch(() => {
     toast('无法读取文件内容', 'error');
   });
+}
+
+function reloadEditorText() {
+  const select = document.getElementById('editorEncoding');
+  const encoding = select ? select.value : '';
+  currentEncoding = encoding;
+  editFile();
 }
 
 function saveFile() {
@@ -734,20 +875,37 @@ if (uploadArea) {
   });
 }
 
+function resetPreviewEncoding() {
+  currentEncoding = '';
+  const encodingSelect = document.getElementById('previewEncoding');
+  if (encodingSelect) {
+    encodingSelect.value = '';
+  }
+}
+
 function closeModal(id) {
   document.getElementById(id).classList.remove('show');
+  if (id === 'previewModal') {
+    resetPreviewEncoding();
+  }
 }
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
     hideMenu();
+    resetPreviewEncoding();
   }
 });
 
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', e => {
-    if (e.target === overlay) overlay.classList.remove('show');
+    if (e.target === overlay) {
+      overlay.classList.remove('show');
+      if (overlay.id === 'previewModal') {
+        resetPreviewEncoding();
+      }
+    }
   });
 });
 
@@ -791,4 +949,11 @@ function goUp() {
 }
 
 loadState();
+// 恢复 UI 状态
+document.getElementById('viewGrid').classList.toggle('active', viewMode === 'grid');
+document.getElementById('viewList').classList.toggle('active', viewMode === 'list');
+document.getElementById('sortSelect').value = sortBy + '-' + sortDir;
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.classList.toggle('active', btn.dataset.mode === filterMode);
+});
 navigateTo(currentPath);

@@ -65,7 +65,7 @@ public class Util {
         response.setHeader("Content-Range", "bytes " + startByte + "-" + endByte + "/" + file.length());
         //Content-disposition: inline; filename=xxx.xxx 表示浏览器内嵌显示该文件
         //Content-disposition: attachment; filename=xxx.xxx 表示浏览器下载该文件
-        response.setHeader("Content-Disposition", "inline;filename="+fileName.replaceAll("/","") );
+        response.setHeader("Content-Disposition", "inline;filename="+file.getName() );
 
         //传输文件流
         BufferedOutputStream outputStream = null;
