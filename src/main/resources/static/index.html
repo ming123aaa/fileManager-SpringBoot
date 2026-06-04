@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件浏览</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <span class="material-icons" style="font-size:28px;color:var(--primary)">folder_open</span>
+        <span class="header-title">文件浏览</span>
+      </div>
+      <div class="header-right">
+        <div class="search-box">
+          <span class="material-icons">search</span>
+          <input type="text" id="searchInput" placeholder="搜索文件..." onkeyup="filterFiles()">
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button class="btn btn-ghost" onclick="goUp()" title="返回上级">
+          <span class="material-icons">arrow_upward</span>
+        </button>
+        <span id="fileCount" class="file-count">加载中...</span>
+      </div>
+      <div class="toolbar-right">
+        <select id="sortSelect" class="sort-select" onchange="sortFiles()">
+          <option value="name-asc">名称 (A-Z)</option>
+          <option value="name-desc">名称 (Z-A)</option>
+          <option value="size-asc">大小 (从小到大)</option>
+          <option value="size-desc">大小 (从大到小)</option>
+          <option value="date-asc">日期 (最早)</option>
+          <option value="date-desc">日期 (最近)</option>
+        </select>
+        <div class="view-toggle">
+          <button id="viewGrid" class="active" onclick="setView('grid')">
+            <span class="material-icons">grid_view</span>
+          </button>
+          <button id="viewList" onclick="setView('list')">
+            <span class="material-icons">list</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="breadcrumb" id="breadcrumb"></div>
+
+    <div class="content" id="content"></div>
+  </div>
+
+  <div class="context-menu" id="contextMenu"></div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Preview Modal -->
+  <div class="modal-overlay" id="previewModal">
+    <div class="modal preview-modal">
+      <div class="modal-header">
+        <h3 id="previewTitle"></h3>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="copyLink(document.getElementById('previewTitle').textContent)">
+            <span class="material-icons">link</span>
+          </button>
+          <button class="btn btn-ghost" onclick="openInNewTab(document.getElementById('previewTitle').textContent)">
+            <span class="material-icons">open_in_new</span>
+          </button>
+          <button class="btn btn-ghost" onclick="closeModal('previewModal')">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body" id="previewBody"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
