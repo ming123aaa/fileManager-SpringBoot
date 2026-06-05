@@ -55,25 +55,25 @@ mvn clean package -DskipTests
 **方式二：使用 IDEA**
 1. 打开 IDEA，找到 Maven 插件
 2. 打开 Maven 后找到 `Lifecycle` -> `package` 运行
-3. 运行结束后在 `target` 文件夹下可以看到 `FileManager-0.0.1-SNAPSHOT.jar`
+3. 运行结束后在 `target` 文件夹下可以看到 `FileManager-1.0.0.jar`
 
 ### 运行项目
 
 ```bash
 # 默认配置运行
-java -Dfile.encoding=utf-8 -jar target/FileManager-0.0.1-SNAPSHOT.jar
+java -Dfile.encoding=utf-8 -jar target/FileManager-1.0.0.jar
 
 # 方式一：使用 --path 参数指定存储路径
-java -Dfile.encoding=utf-8 -jar target/FileManager-0.0.1-SNAPSHOT.jar --path=/your/files/path
+java -Dfile.encoding=utf-8 -jar target/FileManager-1.0.0.jar --path=/your/files/path
 
 # 方式二：使用 --storage 参数指定存储路径
-java -Dfile.encoding=utf-8 -jar target/FileManager-0.0.1-SNAPSHOT.jar --storage=D:\my-files
+java -Dfile.encoding=utf-8 -jar target/FileManager-1.0.0.jar --storage=D:\my-files
 
 # 方式三：直接传入路径（兼容旧版）
-java -Dfile.encoding=utf-8 -jar target/FileManager-0.0.1-SNAPSHOT.jar /path/to/files
+java -Dfile.encoding=utf-8 -jar target/FileManager-1.0.0.jar /path/to/files
 
 # 指定端口和存储路径
-java -Dfile.encoding=utf-8 -jar target/FileManager-0.0.1-SNAPSHOT.jar --server.port=9090 --path=/your/files/path
+java -Dfile.encoding=utf-8 -jar target/FileManager-1.0.0.jar --server.port=9090 --path=/your/files/path
 ```
 
 **参数说明：**
@@ -191,13 +191,13 @@ server.servlet.session.timeout=30m
 ### Q: 端口被占用怎么办？
 A: 修改 `application.properties` 中的 `server.port`，或启动时指定：
 ```bash
-java -jar FileManager-0.0.1-SNAPSHOT.jar --server.port=9090
+java -jar FileManager-1.0.0.jar --server.port=9090
 ```
 
 ### Q: 如何修改默认存储路径？
 A: 启动时在命令行参数中指定路径：
 ```bash
-java -jar FileManager-0.0.1-SNAPSHOT.jar /your/custom/path
+java -jar FileManager-1.0.0.jar /your/custom/path
 ```
 
 ### Q: 上传大文件失败？
