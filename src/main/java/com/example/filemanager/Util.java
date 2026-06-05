@@ -18,6 +18,20 @@ public class Util {
             "gitignore", "ets", "kt", "java", "py", "js", "ts", "html", "css", "php",
             "c", "cpp", "h", "go", "rs", "rb", "sh", "bat", "sql", "vue", "jsx", "tsx"
     ));
+    private static final Set<String> IMAGE_EXTENSIONS = new HashSet<>(Arrays.asList(
+            "png", "jpg", "jpeg", "gif", "bmp", "svg", "webp"
+    ));
+
+    private static final Set<String> VIDEO_EXTENSIONS = new HashSet<>(Arrays.asList(
+            "mp4", "mkv", "avi", "mov", "wmv", "flv", "mpeg", "mpg", "ogg", "webm"
+    ));
+    private static final Set<String> AUDIO_EXTENSIONS = new HashSet<>(Arrays.asList(
+            "mp3", "wav", "ogg", "flac", "aac", "m4a", "wma", "mp2", "mpa"
+    ));
+
+
+
+
     /**
      * 文件下载，断点续传
      * 参考地址： https://leaveslm.github.io/2018/07/31/2018-2018-07-31-%E6%96%AD%E7%82%B9%E7%BB%AD%E4%BC%A0%E4%B8%8B%E8%BD%BD%E6%96%87%E4%BB%B6-%E5%A4%9A%E5%AA%92%E4%BD%93%E5%9C%A8%E7%BA%BF%E6%92%AD%E6%94%BE/
@@ -66,10 +80,10 @@ public class Util {
             ext = fileName.substring(dotIndex + 1).toLowerCase();
         }
         if (contentType == null) {
-            contentType = TEXT_EXTENSIONS.contains(ext) ? "text/plain" : "application/octet-stream";
-        }
-        if (contentType.startsWith("text/")) {
-            contentType += ";charset=UTF-8";
+            contentType = TEXT_EXTENSIONS.contains(ext) ? "text/plain" : contentType;
+            contentType = IMAGE_EXTENSIONS.contains(ext) ? "image/" + ext : contentType;
+            contentType = VIDEO_EXTENSIONS.contains(ext) ? "video/" + ext : contentType;
+            contentType = AUDIO_EXTENSIONS.contains(ext) ? "audio/" + ext : contentType;
         }
 
         //HTTP 响应头设置
@@ -77,6 +91,13 @@ public class Util {
         if (range != null) {
             response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
         }
+        if (contentType==null){
+            contentType = "application/octet-stream";
+        }
+        if (contentType.startsWith("text/")) {
+            contentType += ";charset=UTF-8";
+        }
+
         response.setContentType(contentType);
         response.setHeader("Content-Type", contentType);
         response.setHeader("Content-Length", String.valueOf(contentLength));
