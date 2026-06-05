@@ -6,9 +6,18 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Util {
+
+    private static final Set<String> TEXT_EXTENSIONS = new HashSet<>(Arrays.asList(
+            "md", "txt", "log", "csv", "json", "xml", "yaml", "yml", "ini", "cfg", "conf", "properties",
+            "gitignore", "ets", "kt", "java", "py", "js", "ts", "html", "css", "php",
+            "c", "cpp", "h", "go", "rs", "rb", "sh", "bat", "sql", "vue", "jsx", "tsx"
+    ));
     /**
      * 文件下载，断点续传
      * 参考地址： https://leaveslm.github.io/2018/07/31/2018-2018-07-31-%E6%96%AD%E7%82%B9%E7%BB%AD%E4%BC%A0%E4%B8%8B%E8%BD%BD%E6%96%87%E4%BB%B6-%E5%A4%9A%E5%AA%92%E4%BD%93%E5%9C%A8%E7%BA%BF%E6%92%AD%E6%94%BE/
@@ -50,7 +59,18 @@ public class Util {
         }
 
         long contentLength = endByte - startByte + 1;
-        String contentType = request.getServletContext().getMimeType(fileName);
+        String contentType = request.getServletContext().getMimeType(file.getAbsolutePath());
+        String ext = "";
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            ext = fileName.substring(dotIndex + 1).toLowerCase();
+        }
+        if (contentType == null) {
+            contentType = TEXT_EXTENSIONS.contains(ext) ? "text/plain" : "application/octet-stream";
+        }
+        if (contentType.startsWith("text/")) {
+            contentType += ";charset=UTF-8";
+        }
 
         //HTTP 响应头设置
         //断点续传，HTTP 状态码必须为 206，否则不设置，如果非断点续传设置 206 状态码，则浏览器无法下载
