@@ -2,6 +2,9 @@
 
 一个基于 Spring Boot 的 Web 文件管理器，提供文件浏览、上传、下载、预览、编辑等功能。
 
+Android App - [fileManager-android](https://github.com/ming123aaa/fileManager-android)
+
+
 ## 功能特性
 
 ### 文件浏览
