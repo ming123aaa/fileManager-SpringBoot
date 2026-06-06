@@ -29,6 +29,10 @@ public class Util {
             "mp3", "wav", "ogg", "flac", "aac", "m4a", "wma", "mp2", "mpa"
     ));
 
+    private static final Set<String> PDF_EXTENSIONS = new HashSet<>(Arrays.asList(
+            "pdf"
+    ));
+
 
 
 
@@ -84,7 +88,9 @@ public class Util {
             contentType = IMAGE_EXTENSIONS.contains(ext) ? "image/" + ext : contentType;
             contentType = VIDEO_EXTENSIONS.contains(ext) ? "video/" + ext : contentType;
             contentType = AUDIO_EXTENSIONS.contains(ext) ? "audio/" + ext : contentType;
+            contentType = PDF_EXTENSIONS.contains(ext) ? "application/pdf" : contentType;
         }
+
 
         //HTTP 响应头设置
         //断点续传，HTTP 状态码必须为 206，否则不设置，如果非断点续传设置 206 状态码，则浏览器无法下载
