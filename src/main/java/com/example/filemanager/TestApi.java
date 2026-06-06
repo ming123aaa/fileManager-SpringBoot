@@ -19,7 +19,7 @@ public class TestApi {
 
     @RequestMapping("connect")
     public String canConnect() {
-        return "200";
+        return "成功";
     }
 
     @RequestMapping("agent")
