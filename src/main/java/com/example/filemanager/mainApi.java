@@ -43,11 +43,7 @@ public class mainApi {
      */
     private File safePath(String path) {
         if (path == null) path = "";
-        try {
-            path = URLDecoder.decode(path, "UTF-8");
-        } catch (Exception e) {
-            // ignore
-        }
+
         // 移除开头的 / 或 \
         if (path.startsWith("/") || path.startsWith("\\")) {
             path = path.substring(1);
@@ -150,9 +146,9 @@ public class mainApi {
     public void downloadFile(@PathVariable String filename, HttpServletRequest request, HttpServletResponse response) {
         String pathWithinApplication = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         String realPath = pathWithinApplication.replaceFirst("/main/files", "");
-        if (!realPath.isEmpty()) {
+
             Util.download(request, response, realPath);
-        }
+
     }
 
     /**

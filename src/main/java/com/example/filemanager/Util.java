@@ -2,10 +2,9 @@ package com.example.filemanager;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
+import java.net.URI;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
@@ -34,8 +33,6 @@ public class Util {
     ));
 
 
-
-
     /**
      * 文件下载，断点续传
      * 参考地址： https://leaveslm.github.io/2018/07/31/2018-2018-07-31-%E6%96%AD%E7%82%B9%E7%BB%AD%E4%BC%A0%E4%B8%8B%E8%BD%BD%E6%96%87%E4%BB%B6-%E5%A4%9A%E5%AA%92%E4%BD%93%E5%9C%A8%E7%BA%BF%E6%92%AD%E6%94%BE/
@@ -50,6 +47,21 @@ public class Util {
         Calendar calendar = Calendar.getInstance();
         File serverDir = new File(ResPath.DownloadPath);
         File file = new File(serverDir + File.separator + fileName);
+        if (!file.exists() || file.isDirectory()) {
+            try {
+                if (file.exists()) {
+                    response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
+                    response.addHeader("Location", "/?path=" + URLEncoder.encode(fileName, "utf-8").replaceAll("\\+", "%20"));
+                } else {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+
+                }
+
+            } catch (Exception e) {
+
+            }
+            return false;
+        }
 
         //下载开始位置
         long startByte = 0;
@@ -97,7 +109,7 @@ public class Util {
         if (range != null) {
             response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
         }
-        if (contentType==null){
+        if (contentType == null) {
             contentType = "application/octet-stream";
         }
         if (contentType.startsWith("text/")) {
@@ -112,7 +124,7 @@ public class Util {
         response.setHeader("Content-Range", "bytes " + startByte + "-" + endByte + "/" + file.length());
         //Content-disposition: inline; filename=xxx.xxx 表示浏览器内嵌显示该文件
         //Content-disposition: attachment; filename=xxx.xxx 表示浏览器下载该文件
-        response.setHeader("Content-Disposition", "inline;filename="+file.getName() );
+        response.setHeader("Content-Disposition", "inline;filename=" + file.getName());
 
         //传输文件流
         BufferedOutputStream outputStream = null;
