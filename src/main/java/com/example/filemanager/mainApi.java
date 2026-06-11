@@ -310,38 +310,7 @@ public class mainApi {
                 }
             }
             // 检测是否包含非 ASCII 字符，如果是则尝试 GBK
-            is.close();
-            try (java.io.InputStream is2 = new FileInputStream(file)) {
-                byte[] buf = new byte[8192];
-                int len;
-                boolean hasHighByte = false;
-                while ((len = is2.read(buf)) != -1) {
-                    for (int i = 0; i < len; i++) {
-                        if ((buf[i] & 0xFF) > 127) {
-                            hasHighByte = true;
-                            break;
-                        }
-                    }
-                    if (hasHighByte) break;
-                }
-                if (hasHighByte) {
-                    // 尝试用 GBK 解码验证
-                    java.nio.charset.Charset gbk = java.nio.charset.Charset.forName("GBK");
-                    java.nio.charset.CharsetDecoder decoder = gbk.newDecoder();
-                    decoder.onMalformedInput(java.nio.charset.CodingErrorAction.REPORT);
-                    try (java.io.InputStream is3 = new FileInputStream(file)) {
-                        byte[] testBuf = new byte[4096];
-                        int testLen = is3.read(testBuf);
-                        if (testLen > 0) {
-                            java.nio.ByteBuffer byteBuffer = java.nio.ByteBuffer.wrap(testBuf, 0, testLen);
-                            decoder.decode(byteBuffer);
-                        }
-                        return gbk;
-                    } catch (Exception e) {
-                        // GBK 解码失败，使用 UTF-8
-                    }
-                }
-            }
+
         } catch (Exception e) {
             // ignore
         }
@@ -357,7 +326,7 @@ public class mainApi {
                            @RequestParam(value = "encoding", required = false) String encoding) {
         File file = safePath(path);
         if (!file.isFile() || !file.exists()) {
-            return "文件不存在";
+            return "";
         }
         java.nio.charset.Charset charset;
         if (encoding != null && !encoding.isEmpty()) {
@@ -379,7 +348,7 @@ public class mainApi {
             return sb.toString();
         } catch (Exception e) {
             e.printStackTrace();
-            return "读取失败: " + e.getMessage();
+            return "";
         }
     }
 
