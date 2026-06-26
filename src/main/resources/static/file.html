@@ -25,6 +25,9 @@
         <button class="btn btn-outline action-btn" onclick="showMkdirModal()">
           <span class="material-icons">create_new_folder</span>新建文件夹
         </button>
+        <button class="btn btn-outline action-btn" onclick="showCreateFileModal()">
+          <span class="material-icons">note_add</span>新建文件
+        </button>
       </div>
     </div>
 
@@ -187,6 +190,25 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModal('mkdirModal')">取消</button>
         <button class="btn btn-primary" onclick="createFolder()">创建</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create File Modal -->
+  <div class="modal-overlay" id="createFileModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>新建文件</h3>
+        <button class="btn btn-ghost" onclick="closeModal('createFileModal')">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="createFileInput" class="form-control" placeholder="请输入文件名（如 test.txt）">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('createFileModal')">取消</button>
+        <button class="btn btn-primary" onclick="createFile()">创建</button>
       </div>
     </div>
   </div>

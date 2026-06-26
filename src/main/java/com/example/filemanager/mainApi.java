@@ -194,6 +194,32 @@ public class mainApi {
     }
 
     /**
+     * 创建空文件
+     */
+    @RequestMapping(value = "/createFile", method = {RequestMethod.GET, RequestMethod.POST})
+    @ResponseBody
+    public String createFile(@RequestParam(value = "path", required = false, defaultValue = "") String path,
+                             @RequestParam("name") String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return "文件名不能为空";
+        }
+        name = new File(name).getName(); // 安全处理
+        File dir = safePath(path);
+        File newFile = new File(dir, name);
+        if (newFile.exists()) {
+            return "文件已存在";
+        }
+        try {
+            if (newFile.createNewFile()) {
+                return "创建成功";
+            }
+            return "创建失败";
+        } catch (IOException e) {
+            return "创建失败: " + e.getMessage();
+        }
+    }
+
+    /**
      * 删除文件或文件夹（递归删除）
      */
     @RequestMapping(value = "/delete", method = {RequestMethod.GET, RequestMethod.POST})

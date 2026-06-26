@@ -347,7 +347,7 @@ function showItemMenu(e, name, isFolder) {
     html += `<div class="context-menu-item" onclick="hideMenu();openFolderInNewTab('${escapeHtml(name)}')">
       <span class="material-icons">open_in_new</span>在新标签页打开</div>`;
   } else {
-    html += `<div class="context-menu-item" onclick="hideMenu();previewFile('${escapeHtml(name)}')">
+    html += `<div class="context-menu-item" onclick="hideMenu();previewOrOpenFile('${escapeHtml(name)}')">
       <span class="material-icons">visibility</span>预览</div>`;
     html += `<div class="context-menu-item" onclick="hideMenu();downloadFile('${escapeHtml(name)}')">
       <span class="material-icons">download</span>下载</div>`;
@@ -470,7 +470,12 @@ function previewOrOpenFile(name) {
     return;
   }
   const ft = getFileType(name);
-  if (ft && (ft.type === 'image' || ft.type === 'audio' || ft.type === 'text' || ft.type === 'code')) {
+  if (ft && (ft.type === 'text' || ft.type === 'code')) {
+    previewPath = currentPath ? currentPath + '/' + name : name;
+    editFile();
+    return;
+  }
+  if (ft && (ft.type === 'image' || ft.type === 'audio')) {
     previewFile(name);
   } else {
     openInNewTab(name);
@@ -728,6 +733,26 @@ function createFolder() {
     if (result.includes('成功')) {
       toast('文件夹创建成功');
       closeModal('mkdirModal');
+      loadFiles();
+    } else {
+      toast(result, 'error');
+    }
+  }).catch(() => toast('创建失败', 'error'));
+}
+
+function showCreateFileModal() {
+  document.getElementById('createFileInput').value = '';
+  document.getElementById('createFileModal').classList.add('show');
+  setTimeout(() => document.getElementById('createFileInput').focus(), 100);
+}
+
+function createFile() {
+  const name = document.getElementById('createFileInput').value.trim();
+  if (!name) { toast('请输入文件名', 'error'); return; }
+  apiPost('createFile', {path: currentPath, name: name}).then(result => {
+    if (result.includes('成功')) {
+      toast('文件创建成功');
+      closeModal('createFileModal');
       loadFiles();
     } else {
       toast(result, 'error');
