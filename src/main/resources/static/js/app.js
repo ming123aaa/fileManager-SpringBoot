@@ -669,7 +669,11 @@ function previewOrOpenFile(name) {
   const ft = getFileType(name);
   if (ft && (ft.type === 'text' || ft.type === 'code')) {
     previewPath = currentPath ? currentPath + '/' + name : name;
-    editFile();
+    if (isReadOnly) {
+      previewFile(name);
+    } else {
+      editFile();
+    }
     return;
   }
   if (ft && (ft.type === 'image' || ft.type === 'audio')) {
