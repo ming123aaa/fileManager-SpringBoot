@@ -80,6 +80,7 @@ public class mainApi {
         File dir = safePath(path);
         File dest = new File(dir, fileName);
         try {
+            dir.mkdirs();
             file.transferTo(dest);
             return "上传成功";
         } catch (Exception e) {
@@ -107,6 +108,7 @@ public class mainApi {
             if (fileName == null) continue;
             fileName = new File(fileName).getName();
             try {
+                dir.mkdirs();
                 file.transferTo(new File(dir, fileName));
                 successCount++;
             } catch (Exception e) {
